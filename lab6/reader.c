@@ -4,8 +4,17 @@
 #include <string.h>
 #include <time.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 int main() {
+    const char *fifo_name = "myfifo";
+    if (access(fifo_name, F_OK) == -1) {
+        if (mkfifo(fifo_name, 0666) == -1) {
+            perror("mkfifo");
+            exit(1);
+        }
+    }
+
     int fd = open("myfifo", O_RDONLY);
     if (fd == -1) {
         perror("open");

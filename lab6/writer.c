@@ -5,9 +5,10 @@
 #include <time.h>
 #include <fcntl.h>
 
-int main() {
 
+int main() {
     sleep(13);
+
     
     int fd = open("myfifo", O_WRONLY);
     if (fd == -1) {
