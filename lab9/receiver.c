@@ -8,15 +8,21 @@
 
 #define SHM_KEY 0x1234
 #define SEM_KEY 0x5678
+#define BUF_SIZE 128
 
 struct sembuf lock = {0, -1, 0};
 struct sembuf unlock = {0, 1, 0};
 
 int main() {
-    int shmid = shmget(SHM_KEY, 0, 0666);
+    int shmid = shmget(SHM_KEY, BUF_SIZE, 0666);
+    if (shmid < 0) { perror("shmget"); exit(1); }
+
     int semid = semget(SEM_KEY, 1, 0666);
+    if (semid < 0) { perror("semget"); exit(1); }
+
 
     char* shm = shmat(shmid, NULL, 0);
+    if (shm == (char*)-1) { perror("shmat"); exit(1); }
 
     while (1) {
         semop(semid, &lock, 1);

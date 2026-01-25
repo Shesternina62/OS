@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
+#include <errno.h>
 
 #define BUF_SIZE 64
 
@@ -67,7 +68,7 @@ int main() {
     pthread_join(r, NULL);
 
     sem_close(sem);
-    sem_unlink("/lab9_");
+    sem_unlink("/lab9");
 
     printf("\nзавершено правильно\n");
     return 0;
