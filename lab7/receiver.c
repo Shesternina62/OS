@@ -7,6 +7,7 @@
 #include <time.h>
 #include <semaphore.h>
 #include <string.h>
+#include <signal.h>
 
 #define SHM_NAME "/time_shm"
 #define SEM_NAME "/time_sem"
@@ -15,13 +16,14 @@ typedef struct {
     pid_t pid;
     char time_str[64];
 } shm_data;
-
+int shm_fd;
 shm_data *data;
 sem_t *sem;
 
 void cleanup(int signo) {
     printf("\nзавершение приемника...\n");
     munmap(data, sizeof(shm_data));
+    close(shm_fd);
     sem_close(sem);
     exit(0);
 }
@@ -31,20 +33,20 @@ int main() {
     signal(SIGINT, cleanup);
     
     // открытие памяти
-    int shm_fd = shm_open(SHM_NAME, O_RDWR, 0666);
+    shm_fd = shm_open(SHM_NAME, O_RDWR, 0666);
     if (shm_fd < 0) {
         perror("shm_open");
         return 1;
     }
 
-    shm_data *data = mmap(NULL, sizeof(shm_data), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    data = mmap(NULL, sizeof(shm_data), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (data == MAP_FAILED) {
         perror("mmap");
         return 1;
     }
 
     // открытие semaphore
-    sem_t *sem = sem_open(SEM_NAME, 0);
+    sem = sem_open(SEM_NAME, 0);
     if (sem == SEM_FAILED) {
         perror("sem_open");
         return 1;

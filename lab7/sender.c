@@ -4,10 +4,13 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <time.h>
 #include <semaphore.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
+
 
 #define SHM_NAME "/time_shm"
 #define SEM_NAME "/time_sem"
@@ -38,7 +41,7 @@ int main() {
     signal(SIGINT, cleanup);
 
     // проверка,начат ли процесс
-    int fd_lock = open("/tmp/sender.lock", O_CREAT | O_RDWR, 0666);
+    fd_lock = open("/tmp/sender.lock", O_CREAT | O_RDWR, 0666);
     if (fd_lock < 0) {
         perror("open lock");
         return 1;
@@ -49,21 +52,24 @@ int main() {
     }
 
     // cоздание памяти
-    int shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
+    shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
     if (shm_fd < 0) {
         perror("shm_open");
         return 1;
     }
     ftruncate(shm_fd, sizeof(shm_data));
 
-    shm_data *data = mmap(NULL, sizeof(shm_data), PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    data = mmap(NULL, sizeof(shm_data),
+            PROT_READ | PROT_WRITE,
+            MAP_SHARED, shm_fd, 0);
     if (data == MAP_FAILED) {
         perror("mmap");
         return 1;
     }
 
+
     // создание semaphore
-    sem_t *sem = sem_open(SEM_NAME, O_CREAT, 0666, 1);
+    sem = sem_open(SEM_NAME, O_CREAT, 0666, 1);
     if (sem == SEM_FAILED) {
         perror("sem_open");
         return 1;
